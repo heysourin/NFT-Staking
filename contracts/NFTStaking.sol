@@ -178,10 +178,3 @@ contract NFTStakeing {
         return IERC721Receiver.onERC721Received.selector;
     }
 }
-
-/*
-1. Create NFT smart contract
-2. Create Token smart cont ract
-3. Add OnERC721Received to Token smart contract
-4 Record the timestamps of staking and unstaking to distribut the fresh ly minted tokens
- */
