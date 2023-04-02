@@ -31,9 +31,9 @@ contract NFTStakeing {
     }
 
     function stake(uint256[] calldata tokenIds) external {
-        uint256 tokenId;
         totalStaked += tokenIds.length;
         for (uint256 i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
             require(nft.ownerOf(tokenId) == msg.sender, "Not your token");
             require(vault[tokenId].tokenId == 0, "Already staked");
 
@@ -47,19 +47,53 @@ contract NFTStakeing {
         }
     }
 
-    function _unstake(uint256[] calldata tokenIds) internal {
-        uint256 tokenId;
+    // function _unstake(uint256[] calldata tokenIds) internal {
+    //     uint256 tokenId;
+    //     totalStaked -= tokenIds.length;
+    //     for (uint256 i = 0; i < tokenIds.length; i++) {
+    //         tokenId = tokenIds[i];
+    //         Stake memory stake = vault[tokenId];
+    //         require(stake.owner == msg.sender, "Not an owner");
+
+    //         delete vault[tokenId];
+
+    //         emit NFTUnstaked(account, tokenId, block.timestamp);
+    //         nft.transferFrom(address(this), account, tokenId);
+    //     }
+    // }
+
+    function _unstakeMany(
+        address account,
+        uint256[] calldata tokenIds
+    ) internal {
         totalStaked -= tokenIds.length;
-        for (uint256 i = 0; i < tokenIds.length; i++) {
-            tokenId = tokenIds[i];
-            Stake memory stake = vault[tokenId];
-            require(stake.owner == msg.sender, "Not an owner");
+        for (uint i = 0; i < tokenIds.length; i++) {
+            uint256 tokenId = tokenIds[i];
+
+            Stake memory staked = vault[tokenId];
+            require(staked.owner == msg.sender, "not an owner");
 
             delete vault[tokenId];
 
             emit NFTUnstaked(account, tokenId, block.timestamp);
+
             nft.transferFrom(address(this), account, tokenId);
         }
+    }
+
+    function claim(uint256[] calldata tokenIds) external {
+        _claim(msg.sender, tokenIds, false);
+    }
+
+    function claimForAddress(
+        address account,
+        uint256[] calldata tokenIds
+    ) external {
+        _claim(account, tokenIds, false);
+    }
+
+    function unstake(uint256[] calldata tokenIds) external {
+        _claim(msg.sender, tokenIds, true);
     }
 
     function _claim(
@@ -102,14 +136,46 @@ contract NFTStakeing {
         return [earned];
     }
 
-    function balanceOf(address account) public view returns(uint256 ){
+    function balanceOf(address account) public view returns (uint256) {
         uint256 balance = 0;
-        uint256 supply = nft.totalSupply()
-        for(uint256 i =1 ; i<= supply;i++){
-            if(vault[i].owner == account){
+        uint256 supply = nft.totalSupply();
+        for (uint256 i = 1; i <= supply; i++) {
+            if (vault[i].owner == account) {
                 balance += 1;
             }
         }
+    }
+
+    function tokensOfOwner(
+        address account
+    ) public view returns (uint256[] memory ownerTokens) {
+        uint256 supply = nft.totalSupply();
+        uint256[] memory tmp = new uint256[](supply);
+
+        uint256 index = 0;
+        for (uint tokenId = 1; tokenId <= supply; tokenId++) {
+            if (vault[tokenId].owner == account) {
+                tmp[index] = vault[tokenId].tokenId;
+                index += 1;
+            }
+        }
+
+        uint256[] memory tokens = new uint256[](index);
+        for (uint i = 0; i < index; i++) {
+            tokens[i] = tmp[i];
+        }
+
+        return tokens;
+    }
+
+    function onERC721Received(
+        address,
+        address from,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        require(from == address(0x0), "Cannot send nfts to Vault directly");
+        return IERC721Receiver.onERC721Received.selector;
     }
 }
 

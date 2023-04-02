@@ -7,7 +7,8 @@ contract Collection is ERC721Enumerable, Ownable {
     using Strings for uint256;
     string public baseURI;
     string public baseExtension = ".json";
-    uint256 public maxSupply = 100000;
+    uint256 public cost = 0.001 ether;
+    uint256 public maxSupply = 10000;
     uint public maxMintAmount = 5;
     bool public paused = false;
 
