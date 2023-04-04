@@ -1,5 +1,5 @@
 // SPDX-License-Identifier:MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.4;
 
 import "./Collection.sol";
 import "./Rewards.sol";
@@ -40,9 +40,9 @@ contract NFTStakeing {
             nft.transferFrom(msg.sender, address(this), tokenId);
             emit NFTStaked(msg.sender, tokenId, block.timestamp);
             vault[tokenId] = Stake(
-                msg.sender,
                 uint24(tokenId),
-                uint48(block.timestamp)
+                uint48(block.timestamp),
+                msg.sender
             );
         }
     }
@@ -109,9 +109,9 @@ contract NFTStakeing {
         uint256 stakedAt = stake.timestamp;
         earned += (1000 ether * (block.timestamp - stakedAt)) / 1 days;
         vault[tokenId] = Stake(
-            account,
             uint24(tokenId),
-            uint48(block.timestamp)
+            uint48(block.timestamp),
+            account
         );
         if (earned > 0) {
             earned = earned / 10000;
@@ -121,19 +121,24 @@ contract NFTStakeing {
             _unstakeMany(account, tokenIds);
         }
 
-        emit claimed(account, earned);
+        emit Claimed(account, earned);
     }
 
     function earningInfo(
         uint256[] calldata tokenIds
     ) external view returns (uint256[2] memory info) {
         uint256 tokenId;
+        uint256 totalScore = 0;
+
         uint256 earned = 0;
 
         Stake memory staked = vault[tokenId];
         uint256 staketAt = staked.timestamp;
         earned += (1000 ether * (block.timestamp - staketAt)) / 1 days;
-        return [earned];
+        uint256 earnRatePerSecond = (totalScore * 1 ether) / 1 days;
+        earnRatePerSecond = earnRatePerSecond / 100000;
+        // earned, earnRatePerSecond
+        return [earned, earnRatePerSecond];
     }
 
     function balanceOf(address account) public view returns (uint256) {
@@ -173,7 +178,7 @@ contract NFTStakeing {
         address from,
         uint256,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external pure returns (bytes4) {
         require(from == address(0x0), "Cannot send nfts to Vault directly");
         return IERC721Receiver.onERC721Received.selector;
     }
