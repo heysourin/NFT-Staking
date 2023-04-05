@@ -15,7 +15,7 @@ contract PixelNFT is ERC721Enumerable, Ownable {
     uint256 public immutable maxSupply;
     uint256 public maxMintAmountPerTx;
 
-    uint256 public paused = 1; // USE uint256 instead of bool to save gas, paused = 1 & active = 2
+    uint256 public paused = 1; // Use uint256 instead of bool to save gas, paused = 1 & active = 2
 
     error PixelNFT__ContractIsPaused();
     error PixelNFT__NftSupplyLimitExceeded();
@@ -44,7 +44,6 @@ contract PixelNFT is ERC721Enumerable, Ownable {
                 revert PixelNFT__InsufficientFunds();
             }
         }
-
         _safeMint(msg.sender, _mintAmount);
     }
 }
