@@ -6,11 +6,11 @@ interface IPixelNFT {
 
     function ownerOf(uint256 tokenId) external view returns (address owner);
 
-    function safe3TransferFrom(
+    function safeTransferFrom(
         address from,
         address to,
-        uint256 tokenId,
-        bytes calldata data
+        uint256 tokenId
+        // bytes calldata data
     ) external;
 
     function transferFrom(address from, address to, uint256 tokenId) external;
