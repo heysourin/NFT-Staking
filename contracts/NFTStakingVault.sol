@@ -68,9 +68,9 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         _claim(msg.sender, tokenIds, false);
     }
 
-    function claim(uint256[] calldata tokenIds)external{
+    function claim(uint256[] calldata tokenIds) external {
         _claim(msg.sender, tokenIds, false);
     }
 
-    function _c
+    function _claim() internal {}
 }
