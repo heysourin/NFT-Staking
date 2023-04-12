@@ -72,5 +72,139 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         _claim(msg.sender, tokenIds, false);
     }
 
-    function _claim() internal {}
+    function _claim(
+        address user,
+        uint256[] calldata tokenIds,
+        bool unstakeAll
+    ) internal {
+        uint256 tokenId;
+        uint256 calculateReward;
+        uint256 rewardEarned;
+
+        uint256 len = tokenIds.length;
+        for (uint256 i; i < len; ) {
+            tokenId = tokenIds[i];
+            if (vault[tokenId].owner != user) {
+                revert NFTStakingVault__NotItemOwner();
+            }
+
+            uint256 _stakedAt = vault[tokenId].stakedAt;
+
+            uint256 stakingPeriod = block.timestamp - _stakedAt;
+
+            uint256 _dailyReward = _calculateReward(stakingPeriod);
+
+            calculateReward +=
+                (100 * _dailyReward * stakingPeriod * 1e18) /
+                1 days;
+
+            vault[tokenId].stakedAt = block.timestamp;
+
+            unchecked {
+                ++i;
+            }
+        }
+
+        rewardEarned = calculateReward / 100;
+
+        if (rewardEarned != 0) {
+            token.mint(user, rewardEarned);
+            emit Claimed(user, rewardEarned);
+        }
+
+        if (unstakeAll) {
+            _unstake(user, tokenIds);
+        }
+    }
+
+    function _unstake(address user, uint256[] calldata tokenIds) internal {
+        uint256 tokenId;
+        uint256 unstakeCount;
+
+        uint256 len = tokenIds.length;
+        for (uint256 i; i < len; ) {
+            tokenId = tokenIds[i];
+            require(vault[tokenId].owner == user, "Not owner");
+
+            nft.safeTransferFrom(address(this), user, tokenId);
+
+            delete vault[tokenId];
+
+            emit ItemUnstaked(tokenId, user, block.timestamp);
+
+            unchecked {
+                unstakeCount++;
+                ++i;
+            }
+        }
+
+        totalItemsStaked = totalItemsStaked - unstakeCount;
+    }
+
+    function _calculateReward(
+        uint256 stakingPeriod
+    ) internal pure returns (uint256 dailyReward) {
+        if (stakingPeriod <= MONTH) {
+            dailyReward = 1;
+        } else if (stakingPeriod < 3 * MONTH) {
+            dailyReward = 2;
+        } else if (stakingPeriod < 3 * MONTH) {
+            dailyReward = 4;
+        } else if (stakingPeriod >= 6 * MONTH) {
+            dailyReward = 8;
+        }
+    }
+
+    function getDailyReward(
+        uint256 stakingPeriod
+    ) external pure returns (uint256 dailyReward) {
+        dailyReward = _calculateReward(stakingPeriod);
+    }
+
+    function getTotalRewardEarned(
+        address user
+    ) external view returns (uint256 rewardEarned) {
+        uint256 calculatedReward;
+        uint256[] memory tokens = tokensOfOwner(user);
+
+        uint256 len = tokens.length;
+        for (uint256 i; i < len; ) {
+            uint256 _stakedAt = vault[tokens[i]].stakedAt;
+            uint256 stakingPeriod = block.timestamp - _stakedAt;
+            uint256 _dailyReward = _calculateReward(stakingPeriod);
+            calculatedReward +=
+                (100 * _dailyReward * stakingPeriod * 1e18) /
+                1 days;
+            unchecked {
+                ++i;
+            }
+        }
+        rewardEarned = calculatedReward / 100;
+    }
+
+    function tokensOfOwner(
+        address user
+    ) public view returns (uint256[] memory tokens) {
+        uint256 balance = balanceOf(user);
+        uint256 supply = nft.totalSupply();
+        tokens = new uint256[](balance);
+
+        uint256 counter;
+
+        if (balance == 0) {
+            return tokens;
+        }
+
+        unchecked {
+            for (uint256 i; i <= supply; ++i) {
+                if (vault[i].owner == user) {
+                    tokens[counter] = i;
+                    counter++;
+                }
+                if (counter == balance) {
+                    return tokens;
+                }
+            }
+        }
+    }
 }
