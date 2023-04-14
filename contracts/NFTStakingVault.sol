@@ -19,7 +19,7 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         uint256 stakedAt;
     }
 
-    mapping(uint256 => Stake) vault;
+    mapping(uint256 => Stake) vault; //vault[tokenId] = Stake
 
     event ItemStaked(uint256 tokenId, address owner, uint256 timestamp);
     event ItemUnstaked(uint256 tokenId, address owner, uint256 timestamp);
@@ -37,8 +37,8 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         uint256 tokenId;
         uint256 stakedCount;
 
-        uint256 len = tokenIds.length;
-        for (uint256 i; i < len; ) {
+        // uint256 len = tokenIds.length;
+        for (uint256 i; i < tokenIds.length; ) {
             tokenId = tokenIds[i];
 
             if (vault[tokenId].owner != address(0)) {
@@ -81,8 +81,8 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         uint256 calculateReward;
         uint256 rewardEarned;
 
-        uint256 len = tokenIds.length;
-        for (uint256 i; i < len; ) {
+        // uint256 len = tokenIds.length;
+        for (uint256 i; i < tokenIds.length; ) {
             tokenId = tokenIds[i];
             if (vault[tokenId].owner != user) {
                 revert NFTStakingVault__NotItemOwner();
@@ -182,6 +182,31 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         rewardEarned = calculatedReward / 100;
     }
 
+    function getRewardEarnedPerNft(
+        uint256 _tokenId
+    ) external view returns (uint256 rewardEarned) {
+        uint256 _stakedAt = vault[_tokenId].stakedAt;
+        uint256 stakingPeriod = block.timestamp - _stakedAt;
+        uint256 _dailyReward = _calculateReward(stakingPeriod);
+
+        uint256 calculatedReward = (100 * _dailyReward * stakingPeriod * 1e18) /
+            1 days;
+        rewardEarned = calculatedReward / 100;
+    }
+
+    function balanceOf(
+        address user
+    ) public view returns (uint256 nftStakebalance) {
+        uint256 supply = nft.totalSupply();
+        unchecked {
+            for (uint256 i; i < supply; ++i) {
+                if (vault[i].owner == user) {
+                    nftStakebalance += 1;
+                }
+            }
+        }
+    }
+
     function tokensOfOwner(
         address user
     ) public view returns (uint256[] memory tokens) {
@@ -206,5 +231,14 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
                 }
             }
         }
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external pure override returns (bytes4) {
+        return IERC721Receiver.onERC721Received.selector;
     }
 }
