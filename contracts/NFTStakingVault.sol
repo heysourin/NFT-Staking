@@ -65,7 +65,7 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
     }
 
     function unstake(uint256[] calldata tokenIds) external {
-        _claim(msg.sender, tokenIds, false);
+        _claim(msg.sender, tokenIds, true);
     }
 
     function claim(uint256[] calldata tokenIds) external {
@@ -82,6 +82,7 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         uint256 rewardEarned;
 
         // uint256 len = tokenIds.length;
+        //Calculating the Rewards using for loop
         for (uint256 i; i < tokenIds.length; ) {
             tokenId = tokenIds[i];
             if (vault[tokenId].owner != user) {
