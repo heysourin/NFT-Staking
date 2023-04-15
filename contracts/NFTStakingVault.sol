@@ -122,8 +122,8 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
         uint256 tokenId;
         uint256 unstakeCount;
 
-        uint256 len = tokenIds.length;
-        for (uint256 i; i < len; ) {
+        // uint256 len = tokenIds.length;
+        for (uint256 i; i < tokenIds.length; ) {
             tokenId = tokenIds[i];
             require(vault[tokenId].owner == user, "Not owner");
 
@@ -149,7 +149,7 @@ contract NFTStakingVault is Ownable, IERC721Receiver {
             dailyReward = 1;
         } else if (stakingPeriod < 3 * MONTH) {
             dailyReward = 2;
-        } else if (stakingPeriod < 3 * MONTH) {
+        } else if (stakingPeriod < 6 * MONTH) {
             dailyReward = 4;
         } else if (stakingPeriod >= 6 * MONTH) {
             dailyReward = 8;
