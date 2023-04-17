@@ -120,6 +120,7 @@ describe("Contracts: ", function () {
         (x) => Number(x)
       );
       expect(userWallet).to.have.members([0, 1, 2, 3]);
+      
     });
   });
 });
