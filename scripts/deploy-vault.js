@@ -13,14 +13,14 @@ async function main() {
   const baseURI = "ipffs://QmSfRvWHmZVBvSTjzGghsFzDEuMDdT2ZceS8Nvn35Lq2Wr";
 
   const maxSupply = 50;
-  const minCost = getAmountInWei(0.01);
+  const mintCost = getAmountInWei(0.01);
   const maxMintAmount = 5;
 
   //Deploy Pixel NFT smart contract
   const NFTContract = await ethers.getContractFactory("PixelNFT");
   const nftContract = await NFTContract.deploy(
     maxSupply,
-    minCost,
+    mintCost,
     maxMintAmount
   );
 

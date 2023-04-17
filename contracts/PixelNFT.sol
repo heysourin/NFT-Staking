@@ -50,16 +50,20 @@ contract PixelNFT is ERC721Enumerable, Ownable {
                 revert PixelNFT__InsufficientFunds();
             }
         }
-        _safeMint(msg.sender, _mintAmount);
+        for (uint256 i = 0; i < _mintAmount; i++) {
+            _safeMint(msg.sender, supply + i);
+        }
     }
 
     function setCost(uint256 _cost) external payable onlyOwner {
         cost = _cost;
     }
 
-    function setMaxMintAmountPerTx(
-        uint256 _maxMintAmountPerTx
-    ) external payable onlyOwner {
+    function setMaxMintAmountPerTx(uint256 _maxMintAmountPerTx)
+        external
+        payable
+        onlyOwner
+    {
         maxMintAmountPerTx = _maxMintAmountPerTx;
     }
 
@@ -78,9 +82,13 @@ contract PixelNFT is ERC721Enumerable, Ownable {
         require(success);
     }
 
-    function tokenURI(
-        uint256 tokenId
-    ) public view virtual override returns (string memory) {
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        virtual
+        override
+        returns (string memory)
+    {
         if (!_exists(tokenId)) revert PixelNFT__QueryForNonExistentToken();
 
         string memory currentBaseURI = _baseURI();
